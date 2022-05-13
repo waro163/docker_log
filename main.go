@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -37,13 +38,17 @@ func main() {
 		}
 	}()
 
-	args := filters.NewArgs(filters.Arg("event", "die"))
+	args := filters.NewArgs(
+		filters.Arg("event", "die"),
+	)
+	containerName := os.Getenv("CONTAINER_NAME")
+	if containerName != "" {
+		args.Add("container", containerName)
+	}
 	msgCh, errCh := cli.Events(ctx, types.EventsOptions{Filters: args})
 	for {
 		select {
 		case data := <-msgCh:
-			// fmt.Println("*****************")
-			// fmt.Printf("%#v\n", data)
 			containerIDCh <- data.ID
 		case err := <-errCh:
 			if err != nil {
