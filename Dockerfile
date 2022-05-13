@@ -1,6 +1,5 @@
-FROM golang:1.16
+FROM golang:alpine
 
-ENV TZ Asia/Shanghai
 ENV GOPROXY "https://goproxy.cn,direct"
 
 COPY . /workdir
@@ -9,5 +8,11 @@ WORKDIR /workdir
 RUN go mod vendor
 RUN go build -mod=vendor -o main main.go
 
-# EXPOSE 8080
+FROM alpine
+
+COPY --from=0 /workdir/main /workdir/
+WORKDIR /workdir
+ENV TZ Asia/Shanghai
+RUN apk add bash
+
 ENTRYPOINT ["./main"]
